@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.thesam.me.wear;
 
 import android.content.BroadcastReceiver;
@@ -73,6 +57,13 @@ public class MyWatchFace extends CanvasWatchFaceService {
      */
     private static final int MSG_UPDATE_TIME = 0;
 
+
+    public static final String KEY_WEATHER_ID = "_ID";
+    public static final String KEY_WEATHER_LOW = "LOW";
+    public static final String KEY_WEATHER_HEIGHT = "HEIGHT";
+    public static final String KEY_WEATHER_ICON = "ICON";
+    public static final String KEY_WEATHER_DESCRI = "DESCRI";
+
     @Override
     public Engine onCreateEngine() {
         return new Engine();
@@ -115,18 +106,18 @@ public class MyWatchFace extends CanvasWatchFaceService {
         };
         float mXOffset;
         float mYOffset;
-        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-
+        private GoogleApiClient mGoogleApiClient;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
          */
         boolean mLowBitAmbient;
+        private String low;
+        private String height;
+        private String desc;
+        private String id;
+
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -149,6 +140,13 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
 
             mCalendar = Calendar.getInstance();
+            mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
+                    .addApi(Wearable.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+            mGoogleApiClient.connect();
+
         }
 
         @Override
@@ -171,12 +169,14 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             if (visible) {
                 registerReceiver();
-                mGoogleApiClient.connect();
+
+
                 // Update time zone in case it changed while we weren't visible.
                 mCalendar.setTimeZone(TimeZone.getDefault());
                 invalidate();
             } else {
                 unregisterReceiver();
+
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -199,6 +199,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = false;
             MyWatchFace.this.unregisterReceiver(mTimeZoneReceiver);
+            if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.disconnect();
+            }
         }
 
         @Override
@@ -285,7 +288,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     mCalendar.get(Calendar.MINUTE))
                     : String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR),
                     mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND));
-            canvas.drawText(text + "PM ********", mXOffset, mYOffset, mTextPaint);
+            canvas.drawText(text + low, mXOffset, mYOffset, mTextPaint);
         }
 
         /**
@@ -322,38 +325,53 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Wearable.DataApi.addListener(mGoogleApiClient, this);
-            Log.d(LOG_TAG, "onConnected: ");
+            Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
 
 
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-            Wearable.DataApi.removeListener(mGoogleApiClient, this);
-            mGoogleApiClient.disconnect();
+//            Wearable.DataApi.removeListener(mGoogleApiClient, this);
+            Log.d(LOG_TAG, "onConnectionSuspended: ");
+
         }
 
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+            Log.d(LOG_TAG, "onConnectionFailed: ");
         }
 
         @Override
         public void onDataChanged(DataEventBuffer dataEventBuffer) {
+            Log.d(LOG_TAG, "onDataChanged: ");
             for (DataEvent event : dataEventBuffer) {
                 if (event.getType() == DataEvent.TYPE_CHANGED) {
-                    // DataItem changed
                     DataItem item = event.getDataItem();
-
-                    if (item.getUri().getPath().compareTo("/wearable") == 0) {
+                    if (("/wearable").equals(item.getUri().getPath())) {
                         DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
-                        Log.d(LOG_TAG, "onDataChanged: " + dataMap.toString());
+                        if (dataMap.containsKey(KEY_WEATHER_HEIGHT)) {
+                            height = dataMap.getString(KEY_WEATHER_HEIGHT);
+                            Log.d(LOG_TAG, "onDataChanged: -----> " + height);
+                        }
+                        if (dataMap.containsKey(KEY_WEATHER_LOW)) {
+                            low = dataMap.getString(KEY_WEATHER_LOW);
+                        }
+                        if (dataMap.containsKey(KEY_WEATHER_ID)) {
+                            id = dataMap.getString(KEY_WEATHER_ID);
+                        }
+                        if (dataMap.containsKey(KEY_WEATHER_DESCRI)) {
+                            desc = dataMap.getString(KEY_WEATHER_DESCRI);
+                        }
+
+                        Log.d("HEYHEYHEY", height + ";;;;" + low);
                     }
-                } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                    // DataItem deleted
                 }
+
             }
+            invalidate();
         }
+
+
     }
 }

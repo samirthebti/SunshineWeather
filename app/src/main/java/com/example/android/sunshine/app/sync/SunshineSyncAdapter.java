@@ -93,12 +93,13 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     public static final String KEY_WEATHER_ICON = "ICON";
     public static final String KEY_WEATHER_DESCRI = "DESCRI";
     private GoogleApiClient mGoogleApiClient;
-    private DataMap data = new DataMap();
+    private DataMap data;
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(LOG_TAG, "onConnected: ");
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/wearable").setUrgent();
+        Log.d(LOG_TAG, "data : Description  ****  " + data.getString(KEY_WEATHER_DESCRI));
         putDataMapRequest.getDataMap().putAll(data);
         PutDataRequest request = putDataMapRequest.asPutDataRequest().setUrgent();
         Wearable.DataApi.putDataItem(mGoogleApiClient, request)
@@ -108,7 +109,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                         Log.d(LOG_TAG, "onResult: " + dataItemResult.toString());
                     }
                 });
-        Log.d(LOG_TAG, "onResult: " + request.toString());
+        Log.d(LOG_TAG, "data sended  ");
         mGoogleApiClient.disconnect();
 
     }
@@ -143,6 +144,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
     }
 
     @Override
@@ -404,7 +406,15 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP, low);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC, description);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
+                if (i == 0) {
 
+                    data = new DataMap();
+                    data.putString(KEY_WEATHER_ID, weatherId + "");
+                    data.putString(KEY_WEATHER_HEIGHT, high + "");
+                    data.putString(KEY_WEATHER_LOW, low + "");
+                    data.putString(KEY_WEATHER_DESCRI, description + "");
+
+                }
                 cVVector.add(weatherValues);
             }
 
@@ -423,6 +433,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 updateWidgets();
                 updateMuzei();
                 notifyWeather();
+                mGoogleApiClient.connect();
             }
             Log.d(LOG_TAG, "Sync Complete. " + cVVector.size() + " Inserted");
             setLocationStatus(getContext(), LOCATION_STATUS_OK);
@@ -556,17 +567,13 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putLong(lastNotificationKey, System.currentTimeMillis());
                     editor.commit();
-                    data.putString(KEY_WEATHER_ID, weatherId + "");
-                    data.putString(KEY_WEATHER_HEIGHT, high + "");
-                    data.putString(KEY_WEATHER_LOW, low + "");
-                    data.putString(KEY_WEATHER_DESCRI, desc + "");
-                    data.putString(KEY_WEATHER_ID, iconId + "");
+
                 }
                 cursor.close();
 
             }
         }
-        mGoogleApiClient.connect();
+
     }
 
     /**
