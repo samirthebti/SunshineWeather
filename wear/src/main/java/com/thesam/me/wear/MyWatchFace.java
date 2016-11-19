@@ -345,7 +345,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 if (event.getType() == DataEvent.TYPE_CHANGED) {
                     // DataItem changed
                     DataItem item = event.getDataItem();
-                    if (item.getUri().getPath().compareTo("/watchface") == 0) {
+
+                    if (item.getUri().getPath().compareTo("/wearable") == 0) {
                         DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                         Log.d(LOG_TAG, "onDataChanged: " + dataMap.toString());
                     }

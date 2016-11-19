@@ -40,9 +40,8 @@ import com.example.android.sunshine.app.data.WeatherContract;
 import com.example.android.sunshine.app.muzei.WeatherMuzeiSource;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.wearable.DataApi;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.DataApi.DataItemResult;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
@@ -63,7 +62,7 @@ import java.net.URL;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 
-public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements ConnectionCallbacks, OnConnectionFailedListener {
+public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
     public static final String ACTION_DATA_UPDATED =
             "com.example.android.sunshine.app.ACTION_DATA_UPDATED";
@@ -98,29 +97,30 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(LOG_TAG, "onConnected: connected to wear");
-        if (data != null && data.size() > 0) {
-            PutDataMapRequest putDMR = PutDataMapRequest.create("/watchface");
-            putDMR.getDataMap().putAll(data);
-            PutDataRequest request = putDMR.asPutDataRequest().setUrgent();
-            DataApi.DataItemResult result = Wearable.DataApi.putDataItem(mGoogleApiClient, request).await();
-            if (result.getStatus().isSuccess()) {
-                Log.v("WatchUpdaterReceiver", "DataMap: " + data + " sent successfully to data layer ");
-            } else {
-                // error happen here
-                Log.v("WatchUpdaterReceiver", "ERROR: failed to send DataMap to data layer");
-            }
-        }
+        Log.d(LOG_TAG, "onConnected: ");
+        PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/wearable").setUrgent();
+        putDataMapRequest.getDataMap().putAll(data);
+        PutDataRequest request = putDataMapRequest.asPutDataRequest().setUrgent();
+        Wearable.DataApi.putDataItem(mGoogleApiClient, request)
+                .setResultCallback(new ResultCallback<DataItemResult>() {
+                    @Override
+                    public void onResult(@NonNull DataItemResult dataItemResult) {
+                        Log.d(LOG_TAG, "onResult: " + dataItemResult.toString());
+                    }
+                });
+        Log.d(LOG_TAG, "onResult: " + request.toString());
+        mGoogleApiClient.disconnect();
+
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d(LOG_TAG, "onConnectionSuspended: connection to wear Suspended");
+
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(LOG_TAG, "onConnectionFailed: Connection to wear failed");
+
     }
 
 
@@ -138,6 +138,11 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     public SunshineSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
+        mGoogleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(Wearable.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
     }
 
     @Override
@@ -449,6 +454,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     private void notifyWeather() {
         Context context = getContext();
+
         //checking the last update and notify if it' the first of the day
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String displayNotificationsKey = context.getString(R.string.pref_enable_notifications_key);
@@ -468,11 +474,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
                 // we'll query our contentProvider, as always
                 Cursor cursor = context.getContentResolver().query(weatherUri, NOTIFY_WEATHER_PROJECTION, null, null, null);
-                mGoogleApiClient = new GoogleApiClient.Builder(context)
-                        .addConnectionCallbacks(this)
-                        .addOnConnectionFailedListener(this)
-                        .addApi(Wearable.API)
-                        .build();
+
 
                 if (cursor.moveToFirst()) {
                     int weatherId = cursor.getInt(INDEX_WEATHER_ID);
@@ -561,9 +563,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                     data.putString(KEY_WEATHER_ID, iconId + "");
                 }
                 cursor.close();
-                mGoogleApiClient.connect();
+
             }
         }
+        mGoogleApiClient.connect();
     }
 
     /**
