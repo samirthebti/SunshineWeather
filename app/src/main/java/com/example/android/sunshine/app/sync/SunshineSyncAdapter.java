@@ -97,19 +97,16 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(LOG_TAG, "onConnected: ");
+
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/wearable").setUrgent();
-        Log.d(LOG_TAG, "data : Description  ****  " + data.getString(KEY_WEATHER_DESCRI));
         putDataMapRequest.getDataMap().putAll(data);
         PutDataRequest request = putDataMapRequest.asPutDataRequest().setUrgent();
         Wearable.DataApi.putDataItem(mGoogleApiClient, request)
                 .setResultCallback(new ResultCallback<DataItemResult>() {
                     @Override
                     public void onResult(@NonNull DataItemResult dataItemResult) {
-                        Log.d(LOG_TAG, "onResult: " + dataItemResult.toString());
                     }
                 });
-        Log.d(LOG_TAG, "data sended  ");
         mGoogleApiClient.disconnect();
 
     }
