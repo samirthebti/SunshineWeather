@@ -104,7 +104,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
         Paint mDayName;
 
 
-
         boolean mAmbient;
         Calendar mCalendar;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -123,9 +122,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
          * disable anti-aliasing in ambient mode.
          */
         boolean mLowBitAmbient;
-        private String low = "15";
-        private String height = "25";
-        private String desc = "Sunny";
+        private String low = "--";
+        private String height = "--";
+        private String desc = "----";
         private String id = "1";
 
 
@@ -159,8 +158,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             mDayName = new Paint();
             mDayName = createTextPaint(resources.getColor(R.color.secondary_text));
-
-
 
 
             mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
@@ -238,9 +235,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
 //            Config the text size
             mTextPaint.setTextSize(textSize);
-            mDayName.setTextSize(textSize / 3f);
+            mDayName.setTextSize(textSize / 3);
             mHeightTextPaint.setTextSize(textSize / 2);
-            mLowTextPaint.setTextSize(textSize / 2);
+            mLowTextPaint.setTextSize(textSize / 2.5f);
 
         }
 
@@ -262,6 +259,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
+
                     mTextPaint.setAntiAlias(!inAmbientMode);
                     mHeightTextPaint.setAntiAlias(!inAmbientMode);
                     mLowTextPaint.setAntiAlias(!inAmbientMode);
@@ -344,7 +342,12 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (!isInAmbientMode()) {
 
 
-                int icon = Utils.getImagesWithWeatherId(id);
+                int icon = 0;
+                try {
+                    icon = Utils.getImagesWithWeatherId(id);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 if (icon != -1) {
                     weatherIcon = BitmapFactory.decodeResource(getResources(), icon);
@@ -353,7 +356,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 }
                 canvas.drawBitmap(weatherIcon, iconXOffset, iconYOffset, mTextPaint);
             } else {
-                canvas.drawText(desc, iconXOffset, iconYOffset, mTextPaint);
+                canvas.drawText(desc, iconXOffset, iconYOffset + 40, mHeightTextPaint);
             }
 
 

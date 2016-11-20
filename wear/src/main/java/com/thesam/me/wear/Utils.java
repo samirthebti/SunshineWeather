@@ -60,7 +60,7 @@ public class Utils {
         return "ERR";
     }
 
-    public static int getImagesWithWeatherId(String id) {
+    public static int getImagesWithWeatherId(String id) throws Exception {
         int weatherId = Integer.parseInt(id);
         if (weatherId >= 200 && weatherId <= 232) {
             return R.drawable.ic_storm;
