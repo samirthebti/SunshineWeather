@@ -64,10 +64,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
     public static final String KEY_WEATHER_ID = "_ID";
     public static final String KEY_WEATHER_LOW = "LOW";
     public static final String KEY_WEATHER_HEIGHT = "HEIGHT";
-    public static final String KEY_WEATHER_ICON = "ICON";
     public static final String KEY_WEATHER_DESCRI = "DESCRI";
-    private float aFloat;
     private Bitmap weatherIcon;
+    private float aFloat;
 
     @Override
     public Engine onCreateEngine() {
@@ -102,11 +101,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
         Paint mTextPaint;
         Paint mLowTextPaint;
         Paint mHeightTextPaint;
-        Paint mDescTextPaint;
-        Paint mDay;
         Paint mDayName;
-        Paint mMonth;
-        Paint mYear;
+
 
 
         boolean mAmbient;
@@ -147,6 +143,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             Resources resources = MyWatchFace.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
 
+
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(ContextCompat.getColor(MyWatchFace.this, R.color.background));
 
@@ -163,14 +160,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mDayName = new Paint();
             mDayName = createTextPaint(resources.getColor(R.color.secondary_text));
 
-            mDay = new Paint();
-            mDay = createTextPaint(resources.getColor(R.color.secondary_text));
 
-            mYear = new Paint();
-            mYear = createTextPaint(resources.getColor(R.color.secondary_text));
-
-            mMonth = new Paint();
-            mMonth = createTextPaint(resources.getColor(R.color.secondary_text));
 
 
             mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
@@ -248,10 +238,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
 //            Config the text size
             mTextPaint.setTextSize(textSize);
-            mMonth.setTextSize(textSize / 3f);
-            mDay.setTextSize(textSize / 3f);
             mDayName.setTextSize(textSize / 3f);
-            mYear.setTextSize(textSize / 3f);
             mHeightTextPaint.setTextSize(textSize / 2);
             mLowTextPaint.setTextSize(textSize / 2);
 
@@ -276,6 +263,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
                     mTextPaint.setAntiAlias(!inAmbientMode);
+                    mHeightTextPaint.setAntiAlias(!inAmbientMode);
+                    mLowTextPaint.setAntiAlias(!inAmbientMode);
+                    mDayName.setAntiAlias(!inAmbientMode);
                 }
                 invalidate();
             }
