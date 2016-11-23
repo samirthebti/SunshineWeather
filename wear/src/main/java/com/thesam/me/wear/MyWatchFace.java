@@ -292,7 +292,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
                     // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
+                    Toast.makeText(getApplicationContext(), desc, Toast.LENGTH_SHORT)
                             .show();
                     break;
             }
@@ -328,7 +328,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                             Utils.formatDaay(mCalendar.get(Calendar.DAY_OF_WEEK))
                     , mXOffset, baseTextYOffset, mDayName);
             float tempYOffset = mYOffset - mHeightTextPaint.getTextSize() + 10;
-            if (isLoaded=true) {
+            if (isLoaded) {
                 try {
                     canvas.drawText(Utils.formatTempr(height) + "\u00b0" + "c", afterTimeXOffset + 25, tempYOffset, mHeightTextPaint);
                     canvas.drawText(Utils.formatTempr(low) + "\u00b0" + "c", afterTimeXOffset + 25, mYOffset + 20, mLowTextPaint);
