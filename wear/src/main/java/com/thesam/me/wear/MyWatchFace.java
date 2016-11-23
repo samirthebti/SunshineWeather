@@ -27,10 +27,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
@@ -398,8 +400,31 @@ public class MyWatchFace extends CanvasWatchFaceService {
         @Override
         public void onConnected(@Nullable Bundle bundle) {
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
-
-
+            Wearable.DataApi.getDataItems(mGoogleApiClient).setResultCallback(new ResultCallback<DataItemBuffer>() {
+                @Override
+                public void onResult(@NonNull DataItemBuffer dataItems) {
+                    for (DataItem item : dataItems) {
+                        if (("/wearable").equals(item.getUri().getPath())) {
+                            DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
+                            if (dataMap.containsKey(KEY_WEATHER_HEIGHT)) {
+                                height = dataMap.getString(KEY_WEATHER_HEIGHT);
+                            }
+                            if (dataMap.containsKey(KEY_WEATHER_LOW)) {
+                                low = dataMap.getString(KEY_WEATHER_LOW);
+                            }
+                            if (dataMap.containsKey(KEY_WEATHER_ID)) {
+                                id = dataMap.getString(KEY_WEATHER_ID);
+                            }
+                            if (dataMap.containsKey(KEY_WEATHER_DESCRI)) {
+                                desc = dataMap.getString(KEY_WEATHER_DESCRI);
+                            }
+                            Log.d(LOG_TAG, "On cennected ==> Height > " + height + " Low :  " + low);
+                        }
+                    }
+                    dataItems.release();
+                }
+            });
+            invalidate();
         }
 
         @Override
