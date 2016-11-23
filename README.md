@@ -14,7 +14,7 @@ Features
 + Abstracting logic of display of common UI elements like time and weather info in view models
 
 ScreenShots 
-***
+-------
 <img src="https://github.com/samirthebti/SunshineWeather/blob/master/rounded_img_framed.png" height="400"/> 
 <img src="https://github.com/samirthebti/SunshineWeather/blob/master/Screenshot_1479613101_framed.png" height="400"/> <br>
 ***
