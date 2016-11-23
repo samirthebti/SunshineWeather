@@ -39,7 +39,6 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -69,6 +68,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
     public static final String KEY_WEATHER_DESCRI = "DESCRI";
     private Bitmap weatherIcon;
     private float aFloat;
+    //if the data loaded correctly isLoaded = true
+    private boolean isLoaded = false;
 
     @Override
     public Engine onCreateEngine() {
@@ -320,47 +321,43 @@ public class MyWatchFace extends CanvasWatchFaceService {
             float afterTimeXOffset = mXOffset + widthOfTime;
             float upperYOffset = mYOffset - mTextPaint.getTextSize() + 10;
 
-            float tempYOffset = mYOffset - mHeightTextPaint.getTextSize() + 10;
-            try {
-                canvas.drawText(Utils.formatTempr(height) + "\u00b0" + "c", afterTimeXOffset + 25, tempYOffset, mHeightTextPaint);
-                canvas.drawText(Utils.formatTempr(low) + "\u00b0" + "c", afterTimeXOffset + 25, mYOffset + 20, mLowTextPaint);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            aFloat = mYOffset + 30;
-
             float baseTextYOffset = mYOffset + 30;
-            Date date = mCalendar.getTime();
-
             canvas.drawText(mCalendar.get(Calendar.DAY_OF_MONTH) + " " +
                             Utils.formatMonth(mCalendar.get(Calendar.MONTH)) + " " +
                             new String(mCalendar.get(Calendar.YEAR) + "").substring(2, 4) + ", " +
                             Utils.formatDaay(mCalendar.get(Calendar.DAY_OF_WEEK))
                     , mXOffset, baseTextYOffset, mDayName);
-
-            canvas.drawLine(afterTimeXOffset + 15, upperYOffset, afterTimeXOffset + 15, baseTextYOffset + 15, mTextPaint);
-            float iconXOffset = mXOffset + widthOfTime / 2;
-            float iconYOffset = baseTextYOffset + 20;
-            if (!isInAmbientMode()) {
-
-
-                int icon = 0;
+            float tempYOffset = mYOffset - mHeightTextPaint.getTextSize() + 10;
+            if (isLoaded=true) {
                 try {
-                    icon = Utils.getImagesWithWeatherId(id);
+                    canvas.drawText(Utils.formatTempr(height) + "\u00b0" + "c", afterTimeXOffset + 25, tempYOffset, mHeightTextPaint);
+                    canvas.drawText(Utils.formatTempr(low) + "\u00b0" + "c", afterTimeXOffset + 25, mYOffset + 20, mLowTextPaint);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                aFloat = mYOffset + 30;
+                canvas.drawLine(afterTimeXOffset + 15, upperYOffset, afterTimeXOffset + 15, baseTextYOffset + 15, mTextPaint);
+                float iconXOffset = mXOffset + widthOfTime / 2;
+                float iconYOffset = baseTextYOffset + 20;
+                if (!isInAmbientMode()) {
+                    int icon = 0;
+                    try {
+                        icon = Utils.getImagesWithWeatherId(id);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                if (icon != -1) {
-                    weatherIcon = BitmapFactory.decodeResource(getResources(), icon);
+                    if (icon != -1) {
+                        weatherIcon = BitmapFactory.decodeResource(getResources(), icon);
+                    } else {
+                        weatherIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_full_sad);
+                    }
+                    canvas.drawBitmap(weatherIcon, iconXOffset, iconYOffset, mTextPaint);
                 } else {
-                    weatherIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_full_sad);
+                    canvas.drawText(desc, iconXOffset, iconYOffset + 40, mHeightTextPaint);
                 }
-                canvas.drawBitmap(weatherIcon, iconXOffset, iconYOffset, mTextPaint);
-            } else {
-                canvas.drawText(desc, iconXOffset, iconYOffset + 40, mHeightTextPaint);
-            }
 
+            }
 
         }
 
@@ -404,6 +401,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 @Override
                 public void onResult(@NonNull DataItemBuffer dataItems) {
                     for (DataItem item : dataItems) {
+                        isLoaded=true;
                         if (("/wearable").equals(item.getUri().getPath())) {
                             DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                             if (dataMap.containsKey(KEY_WEATHER_HEIGHT)) {
@@ -444,6 +442,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             Log.d(LOG_TAG, "onDataChanged: ");
             for (DataEvent event : dataEventBuffer) {
                 if (event.getType() == DataEvent.TYPE_CHANGED) {
+                    isLoaded=true;
                     DataItem item = event.getDataItem();
                     if (("/wearable").equals(item.getUri().getPath())) {
                         DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
